@@ -11,10 +11,10 @@ options.C = C;
 
 
 
-[w] = SGMSVM(trD, trLb, options)
+[w,obj] = SGMSVM(trD, trLb, options)
 
 
-function [W] = SGMSVM(X, Y, options)
+function [W, objective] = SGMSVM(X, Y, options)
 labels = Y;
 data = X;
 C = options.C;
@@ -25,51 +25,53 @@ n_one = options.eta1;
 d = size(X,1)
 n = size(X, 2);
 
-
 k = options.featureCount;
 
 W = zeros(d, k);
 
 loss = size(X, 1);
 
-
+objective=0.5*W'*W+C*loss;
 
     for epoch = 1:iterations
-        epoch
         n_res = n_zero / (n_one + epoch);
         %indx = randperm(size(data, 1));
         j = rand(size(X,2));
 
-        for i = 1:n   
+        %for j = indx
+
+
+           for i = 1:n   
                newW = W;      
                newW(:,Y(i)) = -inf;    
                [~, yi_hat_index] = max(newW' * X(:,i));
 
 
-               condition = W(:, Y(i))' * X(:,i) - W(:,Y(yi_hat_index))' * X(:,i) + 1;
+               condition = W(:, Y(i))' * X(:,i) - W(:,yi_hat_index)' * X(:,i) + 1;
 
                if i == j
                     if condition > 0
-                        W(:,j) = W(:,j) - n_res * (W(:,Y(i)) / n);
+                        W(:,i) = W(:,i) - n_res * (W(:,i) / n);
                     else
-                        W(:,j) = W(:,j) - n_res * ( W(:,Y(i)) / n - C * X(:,i));
+                        W(:,i) = W(:,i) - n_res * ( W(:,i) / n - C * X(:,i));
                     end
                elseif i == yi_hat_index
                    if condition > 0
-                        W(:,j) = W(:,j) - n_res * (W(:,Y(yi_hat_index)) / n);
+                        W(:,i) = W(:,i) - n_res * (W(:,yi_hat_index) / n);
                     else
-                        W(:,j) = W(:,j) - n_res * ( W(:,Y(yi_hat_index)) / n + C * X(:,i));
+                        W(:,i) = W(:,i) - n_res * ( W(:,yi_hat_index) / n + C * X(:,i));
                    end
                else
-                   W(:,j) = W(:,j) - n_res * (W(:,Y(i)) / n);
+                   W(:,i) = W(:,i) - n_res * (W(:,i) / n);
 
                end
 
 
 
-        end
+           end
 
- 
+objective=[objective,0.5*W'*W+C*sum(max(1-Y.*(X'*w+b),0))];
+
     end
 end
    
